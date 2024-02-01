@@ -2,9 +2,11 @@ import pygame
 import sys
 import assets
 from spieler import Spieler
+from zombie import Zombie
  
 pygame.init()
 screen = pygame.display.set_mode([1200,595])
+hintergrund_pos_x = 0 #Startposition des Hintergrunds
 pygame.display.set_caption("Pygame Tutorial")
 
 # Hinzufügen von Zustandsvariablen für Menü und Spiel
@@ -35,80 +37,12 @@ class kugel:
     def zeichnen(self):
         pygame.draw.circle(screen, self.farbe, (self.x, self.y), self.radius, 0)
  
-class zombie:
-    def __init__(self,x,y,geschw,breite,hoehe,richtg,xMin,xMax):
-        self.x = x
-        self.y = y
-        self.geschw = geschw
-        self.breite = breite
-        self.hoehe = hoehe
-        self.richtg = richtg
-        self.schritteRechts = 0
-        self.schritteLinks = 0
-        self.xMin = xMin
-        self.xMax = xMax
-        self.leben = 6
-        self.linksListe = [pygame.image.load("Grafiken/l1.png"),pygame.image.load("Grafiken/l2.png"),pygame.image.load("Grafiken/l3.png"),pygame.image.load("Grafiken/l4.png"),pygame.image.load("Grafiken/l5.png"),pygame.image.load("Grafiken/l6.png"),pygame.image.load("Grafiken/l7.png"),pygame.image.load("Grafiken/l8.png")]
-        self.rechtsListe = [pygame.image.load("Grafiken/r1.png"),pygame.image.load("Grafiken/r2.png"),pygame.image.load("Grafiken/r3.png"),pygame.image.load("Grafiken/r4.png"),pygame.image.load("Grafiken/r5.png"),pygame.image.load("Grafiken/r6.png"),pygame.image.load("Grafiken/r7.png"),pygame.image.load("Grafiken/r8.png")]
-        self.ganz = pygame.image.load("Grafiken/voll.png")
-        self.halb = pygame.image.load("Grafiken/halb.png")
-        self.leer = pygame.image.load("Grafiken/leer.png")
-    def herzen(self):
-        if self.leben >= 2:
-            screen.blit(self.ganz, (507,15))
-        if self.leben >= 4:
-            screen.blit(self.ganz, (569,15))
-        if self.leben == 6:
-            screen.blit(self.ganz, (631,15))
- 
-        if self.leben == 1:
-            screen.blit(self.halb, (507,15))
-        elif self.leben == 3:
-            screen.blit(self.halb, (569,15))
-        elif self.leben == 5:
-            screen.blit(self.halb, (631,15))
- 
-        if self.leben <= 0:
-            screen.blit(self.leer, (507,15))
-        if self.leben <= 2:
-            screen.blit(self.leer, (569,15))
-        if self.leben <= 4:
-            screen.blit(self.leer, (631,15))
-
-    def zZeichnen(self):
-        if self.schritteRechts == 63:
-            self.schritteRechts = 0
-        if self.schritteLinks == 63:
-            self.schritteLinks = 0
- 
-        if self.richtg[0]:
-            screen.blit(self.linksListe[self.schritteLinks//8], (self.x,self.y))
-        if self.richtg[1]:
-            screen.blit(self.rechtsListe[self.schritteRechts//8], (self.x,self.y))
-
-    def Laufen(self):
-        self.x += self.geschw
-        if self.geschw > 0:
-            self.richtg = [0,1]
-            self.schritteRechts += 1
-        if self.geschw < 0:
-            self.richtg = [1,0]
-            self.schritteLinks += 1
-            
-    def hinHer(self):
-        if self.x > self.xMax:
-            self.geschw *= -1
-        elif self.x < self.xMin:
-            self.geschw *= -1
-        self.Laufen()
-
 def init_spiel():
     global linkeWand, rechteWand, spieler1, zombies, verloren, gewonnen, kugeln
     linkeWand = pygame.draw.rect(screen, (255,255,255) , (0,0,2,600) , 0)
-    rechteWand = pygame.draw.rect(screen, (0,0,0) , (1198,0,2,600) , 0)
-    spieler1 = Spieler(300,393,4,96,128,-16,[0,0,1,0],0,0,screen)
-    zombies = [zombie(600, 393, 5, 96, 128, [0, 0], 40, 1090),
-            zombie(800, 393, 4, 96, 128, [0, 0], 40, 1090)]
+    rechteWand = pygame.draw.rect(screen, (0,0,0) , (4798,0,2,600) , 0)
+    spieler1 = Spieler(300,393,12,96,128,-16,[0,0,1,0],0,0,screen)
+    zombies = [Zombie(600, 393, 5, 96, 128, [0, 0], 40, 1090, screen)]
     verloren = False
     gewonnen = False
     kugeln = []
@@ -138,13 +72,13 @@ def menu():
                     sys.exit()  # Beendet das Programm
 
 def zeichnen():
-    screen.blit(assets.hintergrund, (0,0))
+    screen.blit(assets.hintergrund, (hintergrund_pos_x,0))
     for k in kugeln:
         k.zeichnen()
     spieler1.spZeichnen()
     
     for z in zombies:  # Zeichne jeden Zombie in der Liste
-        z.zZeichnen()
+        z.zZeichnen(hintergrund_pos_x)
         z.herzen()  # Wenn jeder Zombie eigene Lebenspunkte hat
     pygame.display.update() 
  
@@ -158,13 +92,15 @@ def kugelHandler():
  
 def Kollision():
     global kugeln, verloren, gewonnen
-    spielerRechteck = pygame.Rect(spieler1.x+18,spieler1.y+36,spieler1.breite-36,spieler1.hoehe-36)
+    spielerRechteck = pygame.Rect(spieler1.x + 18, spieler1.y + 36, spieler1.breite - 36, spieler1.hoehe - 36)
 
     for z in zombies:
-        zombieRechteck = pygame.Rect(z.x+18,z.y+24,z.breite-36,z.hoehe-24)
-    
+        # Berechne die tatsächliche Bildschirmposition des Zombies
+        zombieBildschirmX = z.welt_x + hintergrund_pos_x
+        zombieRechteck = pygame.Rect(zombieBildschirmX + 18, z.y + 24, z.breite - 36, z.hoehe - 24)
+
         for k in kugeln:
-            kugelRechteck = pygame.Rect(k.x-k.radius,k.y-k.radius,k.radius*2,k.radius*2)
+            kugelRechteck = pygame.Rect(k.x - k.radius, k.y - k.radius, k.radius * 2, k.radius * 2)
             if zombieRechteck.colliderect(kugelRechteck):
                 kugeln.remove(k)
                 z.leben -= 1
@@ -173,55 +109,70 @@ def Kollision():
                     if not zombies:
                         gewonnen = True
                         pygame.mixer.Sound.play(assets.siegSound)
-                     
-    
-        if zombieRechteck.colliderect(spielerRechteck):
+
+        # Überprüfe die Kollision zwischen dem Spieler und dem Zombie
+        if spielerRechteck.colliderect(zombieRechteck):
             verloren = True
             gewonnen = False
             pygame.mixer.Sound.play(assets.verlorenSound)
             spiel_zustand = "menu"
             return
+
  
 def spiel():
-    global spiel_zustand, verloren, gewonnen, kugeln 
-    init_spiel()
+    global spiel_zustand, verloren, gewonnen, kugeln, hintergrund_pos_x
+    # init_spiel() sollte nur einmal aufgerufen werden, daher entfernen wir es hier aus der spiel-Schleife
 
     while spiel_zustand == "spiel":
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
     
-        spielerRechteck = pygame.Rect(spieler1.x,spieler1.y,96,128)
         gedrueckt = pygame.key.get_pressed()
     
-        if gedrueckt[pygame.K_RIGHT] and not spielerRechteck.colliderect(rechteWand):
-            spieler1.laufen([0,1])
-        elif gedrueckt[pygame.K_LEFT] and not spielerRechteck.colliderect(linkeWand):
-            spieler1.laufen([1,0])
-        else:
-            spieler1.stehen()
-    
+
+        # Rechte Bewegung mit Hintergrundverschiebung
+        if gedrueckt[pygame.K_RIGHT]:
+            if spieler1.x < 1000 - spieler1.breite:  # Spieler bewegt sich bis zu einem bestimmten Punkt auf dem Bildschirm
+                spieler1.laufen([0, 1])
+            elif hintergrund_pos_x > -3600 + 1200:  # Hintergrund bewegt sich, wenn der Spieler den Punkt erreicht
+                hintergrund_pos_x -= spieler1.geschw
+
+            # Wenn der Spieler den rechten Bildschirmrand fast erreicht hat, aber weiter gehen möchte
+            elif spieler1.x < 4800 - spieler1.breite:
+                spieler1.laufen([0, 1])
+
+        
+
+        # Linke Bewegung mit Hintergrundverschiebung
+        if gedrueckt[pygame.K_LEFT]:
+            if spieler1.x > 0:  # Spieler bewegt sich nach links, wenn er nicht am linken Bildschirmrand ist
+                spieler1.laufen([1, 0])
+                if spieler1.x < 200:  # Wenn der Spieler fast am linken Bildschirmrand ist
+                    hintergrund_pos_x += spieler1.geschw  # Hintergrund bewegt sich mit
+
         if gedrueckt[pygame.K_UP]:
             spieler1.sprungSetzen()
         spieler1.springen()
     
         if gedrueckt[pygame.K_SPACE]:
             if len(kugeln) <= 4 and spieler1.ok:
-                kugeln.append(kugel(round(spieler1.x),round(spieler1.y),spieler1.last,8,(0,0,0),7))
-            spieler1.ok = False
-    
-        if not gedrueckt[pygame.K_SPACE]:
+                kugeln.append(kugel(round(spieler1.x), round(spieler1.y), spieler1.last, 8, (0,0,0), 7))
+                spieler1.ok = False
+        else:
             spieler1.ok = True
-    
+
         kugelHandler()
         for z in zombies:
             z.hinHer()
+            z.Laufen()
     
         Kollision()
+        spieler1.aktualisiereAnimation()  # Aktualisiere die Animation des Spielers
         zeichnen()
-        clock.tick(60)
+        pygame.time.Clock().tick(60)
 
-        if verloren or gewonnen: 
+        if verloren or gewonnen:
             if gewonnen:
                 screen.blit(assets.siegBild, (0,0))
             else:
@@ -230,6 +181,9 @@ def spiel():
             pygame.time.delay(2000)
 
             spiel_zustand = "menu"
+
+
+
  
 while True:
     if spiel_zustand == "menu":

@@ -69,3 +69,27 @@ class Spieler:
  
         if self.richtg[3]:
             self.screen.blit(assets.sprung, (self.x,self.y))
+    def aktualisiereAnimation(self):
+        if self.schritteRechts == 63:
+            self.schritteRechts = 0
+        if self.schritteLinks == 63:
+            self.schritteLinks = 0
+
+        if self.richtg[0]:
+            self.screen.blit(assets.linksGehen[self.schritteLinks // 8], (self.x, self.y))
+            self.last = [1, 0]
+
+        if self.richtg[1]:
+            self.screen.blit(assets.rechtsGehen[self.schritteRechts // 8], (self.x, self.y))
+            self.last = [0, 1]
+
+        if self.richtg[2]:
+            if self.last[0]:
+                self.screen.blit(assets.angriffLinks, (self.x, self.y))
+            else:
+                self.screen.blit(assets.angriffRechts, (self.x, self.y))
+
+        if self.richtg[3]:
+            self.screen.blit(assets.sprung, (self.x, self.y))
+
+            
