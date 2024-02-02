@@ -128,34 +128,43 @@ def spiel():
             if event.type == pygame.QUIT:
                 sys.exit()
     
-        gedrueckt = pygame.key.get_pressed()
+        pressed = pygame.key.get_pressed()
     
-
         # Rechte Bewegung mit Hintergrundverschiebung
-        if gedrueckt[pygame.K_RIGHT]:
-            if spieler1.x < 1000 - spieler1.breite:  # Spieler bewegt sich bis zu einem bestimmten Punkt auf dem Bildschirm
+        if pressed[pygame.K_RIGHT]:
+            # Wenn der Spieler sich bewegen kann, ohne dass der Hintergrund das Limit erreicht hat
+            if spieler1.x < 1000 - spieler1.breite and hintergrund_pos_x > -3600 + 1200:
                 spieler1.laufen([0, 1])
-            elif hintergrund_pos_x > -3600 + 1200:  # Hintergrund bewegt sich, wenn der Spieler den Punkt erreicht
+            # Wenn der Hintergrund sich noch bewegen kann
+            elif hintergrund_pos_x > -4800 + 1200 and spieler1.x >= 1000 - spieler1.breite:
                 hintergrund_pos_x -= spieler1.geschw
-
-            # Wenn der Spieler den rechten Bildschirmrand fast erreicht hat, aber weiter gehen möchte
-            elif spieler1.x < 4800 - spieler1.breite:
-                spieler1.laufen([0, 1])
-
-        
+                spieler1.laufenAufDerStelle([0,1])
+            # Wenn der Hintergrund sein Limit erreicht hat und der Spieler am rechten Bildschirmrand ist
+            # Verhindert, dass der Spieler über den rechten Rand hinausgeht
+            elif hintergrund_pos_x <= -4800 + 1200:
+                if spieler1.x < 1200 - spieler1.breite:  # Begrenzt die x-Position des Spielers
+                    spieler1.laufen([0, 1])
+                else:
+                    spieler1.x = 1200 - spieler1.breite  # Fixiert den Spieler am rechten Rand
 
         # Linke Bewegung mit Hintergrundverschiebung
-        if gedrueckt[pygame.K_LEFT]:
-            if spieler1.x > 0:  # Spieler bewegt sich nach links, wenn er nicht am linken Bildschirmrand ist
+        if pressed[pygame.K_LEFT]:
+            # Wenn der Spieler sich nach links bewegen kann, ohne dass der Hintergrund bewegt werden muss
+            if spieler1.x > 200 and hintergrund_pos_x == 0:
                 spieler1.laufen([1, 0])
-                if spieler1.x < 200:  # Wenn der Spieler fast am linken Bildschirmrand ist
-                    hintergrund_pos_x += spieler1.geschw  # Hintergrund bewegt sich mit
+            # Wenn der Hintergrund sich noch nach rechts bewegen kann
+            elif hintergrund_pos_x < 0 and spieler1.x <= 200:
+                hintergrund_pos_x += spieler1.geschw
+                spieler1.laufenAufDerStelle([1,0])
+            # Erlaubt dem Spieler, den linken Rand zu erreichen, wenn der Hintergrund am Limit ist
+            elif spieler1.x > 0:
+                spieler1.laufen([1, 0])
 
-        if gedrueckt[pygame.K_UP]:
+        if pressed[pygame.K_UP]:
             spieler1.sprungSetzen()
         spieler1.springen()
     
-        if gedrueckt[pygame.K_SPACE]:
+        if pressed[pygame.K_SPACE]:
             if len(kugeln) <= 4 and spieler1.ok:
                 kugeln.append(kugel(round(spieler1.x), round(spieler1.y), spieler1.last, 8, (0,0,0), 7))
                 spieler1.ok = False
