@@ -17,8 +17,6 @@ class Spieler:
         self.last = [1,0]
         self.ok = True
         self.screen = screen
-        self.imAngriff = False  # Neues Attribut, um den Angriffszustand zu verfolgen
-        self.angriffTimer = 0  # Timer für die Dauer des Angriffs
 
     def updateAngriffszustand(self):
         if self.imAngriff and self.angriffTimer > 0:

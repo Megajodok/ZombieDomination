@@ -26,9 +26,9 @@ def init_spiel():
     # x, y(boden), geschw, breite, höhe, sprungvar, richtg, schritteRechts, schritteLinks
     spieler1 = Spieler(300,393,12,96,128,-16,[0,0,1,0,0,0],0,0,screen)
     # x, y, geschw, breite, höhe, richtung, xmin, xmaxm, screen, startrichtung (0 links, 1 rechts)
-    #zombies = []
-    zombies = [Zombie(600, 393, 5, 96, 128, 4, 4800, screen, 1),
-           Zombie(700, 393, 5, 96, 128, 4, 4800, screen, 0)]
+    zombies = []
+    #zombies = [Zombie(600, 393, 5, 96, 128, 4, 4800, screen, 1),
+    #       Zombie(700, 393, 5, 96, 128, 4, 4800, screen, 0)]
     verloren = False
     gewonnen = False
     kugeln = []
@@ -117,10 +117,10 @@ def spiel():
             
         if pressed[pygame.K_RIGHT]:
             # Wenn der Spieler sich bewegen kann, ohne dass der Hintergrund das Limit erreicht hat
-            if spieler1.x < 1000 - spieler1.breite and hintergrund_pos_x > -2400:
+            if spieler1.x < 800 and hintergrund_pos_x > -2400:
                 spieler1.laufen([0, 1])
             # Wenn der Hintergrund sich noch bewegen kann
-            elif hintergrund_pos_x > -3600 and spieler1.x >= 1000 - spieler1.breite:
+            elif hintergrund_pos_x > -3600:
                 hintergrund_pos_x -= spieler1.geschw
                 spieler1.laufenAufDerStelle([0,1])
             # Wenn der Hintergrund sein Limit erreicht hat und der Spieler am rechten Bildschirmrand ist
@@ -134,13 +134,12 @@ def spiel():
         if not pressed[pygame.K_RIGHT]:
             spieler1.stehen()
 
-        # Linke Bewegung mit Hintergrundverschiebung
         if pressed[pygame.K_LEFT]:
             # Wenn der Spieler sich nach links bewegen kann, ohne dass der Hintergrund bewegt werden muss
-            if spieler1.x > 200 and hintergrund_pos_x == 0:
+            if spieler1.x > 0 and hintergrund_pos_x == 0:
                 spieler1.laufen([1, 0])
             # Wenn der Hintergrund sich noch nach rechts bewegen kann
-            elif hintergrund_pos_x < 0 and spieler1.x <= 200:
+            elif hintergrund_pos_x < 0 and spieler1.x <= 300:
                 hintergrund_pos_x += spieler1.geschw
                 spieler1.laufenAufDerStelle([1,0])
             # Erlaubt dem Spieler, den linken Rand zu erreichen, wenn der Hintergrund am Limit ist
