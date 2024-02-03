@@ -3,13 +3,13 @@ import sys
 import assets
 from spieler import Spieler
 from zombie import Zombie
+from kugel import Kugel
  
 pygame.init()
 screen = pygame.display.set_mode([1200,595])
 hintergrund_pos_x = 0 #Startposition des Hintergrunds
 pygame.display.set_caption("Pygame Tutorial")
 
-# Hinzufügen von Zustandsvariablen für Menü und Spiel
 spiel_zustand = "menu"  # Kann 'menu', 'spiel', oder 'beenden' sein
 menue_auswahl = 0  # 0 für Spiel Start, 1 für Beenden
 
@@ -17,39 +17,25 @@ spieler1 = None
 zombies = []
 kugeln = []
 verloren = False
-gewonnen = False
- 
-class kugel:
-    def __init__(self,spX,spY,richtung,radius,farbe,geschw):
-        self.x = spX
-        self.y = spY
-        if richtung[0]:
-            self.x += 5
-            self.geschw = -1 * geschw
-        elif richtung[1]:
-            self.x += 92
-            self.geschw = geschw
-        self.y += 84
-        self.radius = radius
-        self.farbe = farbe
-    def bewegen(self):
-        self.x += self.geschw
-    def zeichnen(self):
-        pygame.draw.circle(screen, self.farbe, (self.x, self.y), self.radius, 0)
+gewonnen = False 
  
 def init_spiel():
     global linkeWand, rechteWand, spieler1, zombies, verloren, gewonnen, kugeln
     linkeWand = pygame.draw.rect(screen, (255,255,255) , (0,0,2,600) , 0)
     rechteWand = pygame.draw.rect(screen, (0,0,0) , (4798,0,2,600) , 0)
-    spieler1 = Spieler(300,393,12,96,128,-16,[0,0,1,0],0,0,screen)
-    zombies = [Zombie(600, 393, 5, 96, 128, [0, 0], 40, 1090, screen)]
+    # x, y(boden), geschw, breite, höhe, sprungvar, richtg, schritteRechts, schritteLinks
+    spieler1 = Spieler(300,393,12,96,128,-16,[0,0,1,0,0,0],0,0,screen)
+    # x, y, geschw, breite, höhe, richtung, xmin, xmaxm, screen, startrichtung (0 links, 1 rechts)
+    #zombies = []
+    zombies = [Zombie(600, 393, 5, 96, 128, 4, 4800, screen, 1),
+           Zombie(700, 393, 5, 96, 128, 4, 4800, screen, 0)]
     verloren = False
     gewonnen = False
     kugeln = []
 
 def menu():
     global spiel_zustand, menue_auswahl
-    screen.fill((0, 0, 0))  # Schwarzer Hintergrund fürs Menü
+
     if menue_auswahl == 0:
         screen.blit(assets.menu1, (0, 0))  # Zeigt menu1, wenn die Auswahl auf 'Spiel Start' ist
     else:
@@ -117,7 +103,6 @@ def Kollision():
             pygame.mixer.Sound.play(assets.verlorenSound)
             spiel_zustand = "menu"
             return
-
  
 def spiel():
     global spiel_zustand, verloren, gewonnen, kugeln, hintergrund_pos_x
@@ -129,23 +114,25 @@ def spiel():
                 sys.exit()
     
         pressed = pygame.key.get_pressed()
-    
-        # Rechte Bewegung mit Hintergrundverschiebung
+            
         if pressed[pygame.K_RIGHT]:
             # Wenn der Spieler sich bewegen kann, ohne dass der Hintergrund das Limit erreicht hat
-            if spieler1.x < 1000 - spieler1.breite and hintergrund_pos_x > -3600 + 1200:
+            if spieler1.x < 1000 - spieler1.breite and hintergrund_pos_x > -2400:
                 spieler1.laufen([0, 1])
             # Wenn der Hintergrund sich noch bewegen kann
-            elif hintergrund_pos_x > -4800 + 1200 and spieler1.x >= 1000 - spieler1.breite:
+            elif hintergrund_pos_x > -3600 and spieler1.x >= 1000 - spieler1.breite:
                 hintergrund_pos_x -= spieler1.geschw
                 spieler1.laufenAufDerStelle([0,1])
             # Wenn der Hintergrund sein Limit erreicht hat und der Spieler am rechten Bildschirmrand ist
             # Verhindert, dass der Spieler über den rechten Rand hinausgeht
-            elif hintergrund_pos_x <= -4800 + 1200:
+            elif hintergrund_pos_x <= -3600:
                 if spieler1.x < 1200 - spieler1.breite:  # Begrenzt die x-Position des Spielers
                     spieler1.laufen([0, 1])
                 else:
                     spieler1.x = 1200 - spieler1.breite  # Fixiert den Spieler am rechten Rand
+                    
+        if not pressed[pygame.K_RIGHT]:
+            spieler1.stehen()
 
         # Linke Bewegung mit Hintergrundverschiebung
         if pressed[pygame.K_LEFT]:
@@ -163,21 +150,29 @@ def spiel():
         if pressed[pygame.K_UP]:
             spieler1.sprungSetzen()
         spieler1.springen()
-    
+            
         if pressed[pygame.K_SPACE]:
             if len(kugeln) <= 4 and spieler1.ok:
-                kugeln.append(kugel(round(spieler1.x), round(spieler1.y), spieler1.last, 8, (0,0,0), 7))
+                richtung = spieler1.last
+                kugeln.append(Kugel(round(spieler1.x), round(spieler1.y), richtung, 8, (0,0,0), 7, screen))
                 spieler1.ok = False
+                # Setze den Angriffszustand basierend auf der letzten Bewegungsrichtung
+                if richtung[0]:  # Links
+                    spieler1.richtg = [0, 0, 0, 0, 1, 0]  # Setze Angriff nach links        
+                    
+                elif richtung[1]:  # Rechts
+                    spieler1.richtg = [0, 0, 0, 0, 0, 1]  # Setze Angriff nach rechts                
         else:
             spieler1.ok = True
 
         kugelHandler()
+
         for z in zombies:
             z.hinHer()
             z.Laufen()
     
         Kollision()
-        spieler1.aktualisiereAnimation()  # Aktualisiere die Animation des Spielers
+        spieler1.spZeichnen()  # Aktualisiere die Animation des Spielers
         zeichnen()
         pygame.time.Clock().tick(60)
 
@@ -188,16 +183,13 @@ def spiel():
                 screen.blit(assets.verlorenBild, (0,0))
             pygame.display.update()
             pygame.time.delay(2000)
-
             spiel_zustand = "menu"
-
-
-
  
 while True:
     if spiel_zustand == "menu":
         menu()
     elif spiel_zustand == "spiel":
         spiel()
+
     clock = pygame.time.Clock()
     clock.tick(60)

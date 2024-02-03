@@ -1,24 +1,32 @@
 import pygame
+import assets
 
 class Zombie:
-    def __init__(self,welt_x,y,geschw,breite,hoehe,richtg,xMin,xMax, screen):
+    
+    def __init__(self,welt_x,y,geschw,breite,hoehe,xMin,xMax, screen, startrichtung):
         self.welt_x = welt_x
         self.y = y
         self.geschw = geschw
         self.breite = breite
         self.hoehe = hoehe
-        self.richtg = richtg
         self.schritteRechts = 0
         self.schritteLinks = 0
         self.xMin = xMin
         self.xMax = xMax
         self.screen = screen
         self.leben = 6
-        self.linksListe = [pygame.image.load("Grafiken/l1.png"),pygame.image.load("Grafiken/l2.png"),pygame.image.load("Grafiken/l3.png"),pygame.image.load("Grafiken/l4.png"),pygame.image.load("Grafiken/l5.png"),pygame.image.load("Grafiken/l6.png"),pygame.image.load("Grafiken/l7.png"),pygame.image.load("Grafiken/l8.png")]
-        self.rechtsListe = [pygame.image.load("Grafiken/r1.png"),pygame.image.load("Grafiken/r2.png"),pygame.image.load("Grafiken/r3.png"),pygame.image.load("Grafiken/r4.png"),pygame.image.load("Grafiken/r5.png"),pygame.image.load("Grafiken/r6.png"),pygame.image.load("Grafiken/r7.png"),pygame.image.load("Grafiken/r8.png")]
-        self.ganz = pygame.image.load("Grafiken/voll.png")
-        self.halb = pygame.image.load("Grafiken/halb.png")
-        self.leer = pygame.image.load("Grafiken/leer.png")
+        self.linksGehen = assets.ZombieLinksGehen
+        self.rechtsGehen = assets.ZombieRechtsGehen
+        self.ganz = assets.ganz
+        self.halb = assets.halb
+        self.leer = assets.leer
+
+        if startrichtung == 0:
+            self.geschw = -abs(self.geschw)
+        elif startrichtung == 1:
+            self.geschw = abs(self.geschw)
+    
+
     def herzen(self):
         if self.leben >= 2:
             self.screen.blit(self.ganz, (507,15))
@@ -48,25 +56,22 @@ class Zombie:
         # Animationsframes aktualisieren
         if self.geschw > 0:  # Bewegt sich nach rechts
             self.schritteRechts += 1
-            self.schritteRechts %= len(self.rechtsListe)  # Zyklisch durchlaufen
+            self.schritteRechts %= len(self.rechtsGehen)  # Zyklisch durchlaufen
         elif self.geschw < 0:  # Bewegt sich nach links
             self.schritteLinks += 1
-            self.schritteLinks %= len(self.linksListe)  # Zyklisch durchlaufen
-
+            self.schritteLinks %= len(self.linksGehen)  # Zyklisch durchlaufen
 
     def zZeichnen(self, hintergrund_pos_x):
         bildschirm_x = self.welt_x + hintergrund_pos_x
         if -self.breite <= bildschirm_x <= 1200:  # Im sichtbaren Bereich
             bild = None
             if self.geschw > 0:  # Geht nach rechts
-                bild = self.rechtsListe[self.schritteRechts]
+                bild = self.rechtsGehen[self.schritteRechts]
             elif self.geschw < 0:  # Geht nach links
-                bild = self.linksListe[self.schritteLinks]
+                bild = self.linksGehen[self.schritteLinks]
             if bild:
                 self.screen.blit(bild, (bildschirm_x, self.y))
-
-
-                
+              
     def hinHer(self):
         # Aktualisiere welt_x statt nur x
         self.welt_x += self.geschw
