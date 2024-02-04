@@ -14,9 +14,15 @@ class Spieler:
         self.schritteRechts = schritteRechts
         self.schritteLinks = schritteLinks
         self.sprung = False
-        self.last = [1,0]
+        self.last = [0,1]
         self.ok = True
         self.screen = screen
+
+    def angriff(self):
+        if self.last == [1,0]:
+            self.richtg = [0,0,0,0,1,0]
+        elif self.last == [0,1]:
+            self.richtg =  [0,0,0,0,0,1]
 
     def updateAngriffszustand(self):
         if self.imAngriff and self.angriffTimer > 0:
@@ -48,14 +54,6 @@ class Spieler:
                 self.schritteRechts = 0
 
         self.spZeichnen()
-
-    def resetSchritte(self):
-        self.schritteLinks = 0
-        self.schritteRechts = 0
-
-    def stehen(self):
-        self.richtg = [0,0,1,0,0,0]
-        self.resetSchritte()
 
     def sprungSetzen(self):
         if self.sprungvar == -16:
@@ -97,9 +95,11 @@ class Spieler:
 
         if self.richtg[4]:
             self.screen.blit(assets.angriffLinks, (self.x, self.y))
+            self.last = [1,0]
       
 
         if self.richtg[5]:
             self.screen.blit(assets.angriffRechts, (self.x, self.y))
+            self.last = [0,1]
    
             

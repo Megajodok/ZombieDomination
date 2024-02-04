@@ -26,7 +26,6 @@ class Zombie:
         elif startrichtung == 1:
             self.geschw = abs(self.geschw)
     
-
     def herzen(self):
         if self.leben >= 2:
             self.screen.blit(self.ganz, (507,15))

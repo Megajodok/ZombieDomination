@@ -24,3 +24,7 @@ ganz = pygame.image.load("Grafiken/voll.png")
 halb = pygame.image.load("Grafiken/halb.png")
 leer = pygame.image.load("Grafiken/leer.png")
 
+print(hintergrund.get_width())
+print(hintergrund.get_height())
+
+
