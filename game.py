@@ -1,9 +1,14 @@
 import pygame
+import time
 import sys
 import assets
 from spieler import Spieler
 from zombie import Zombie
 from kugel import Kugel
+
+from settings import Settings
+from menu import Menu
+from Button import Button
  
 pygame.init()
 screen = pygame.display.set_mode([1200,595])
@@ -25,28 +30,24 @@ def init_spiel():
     kugeln = []
     hintergrund_pos_x = 0
 
-def menu():
-    global spiel_zustand, menue_auswahl
-
-    if menue_auswahl == 0:
-        screen.blit(assets.menu1, (0, 0))  # Zeigt menu1, wenn die Auswahl auf 'Spiel Start' ist
-    else:
-        screen.blit(assets.menu2, (0, 0))  # Zeigt menu2, wenn die Auswahl auf 'Beenden' ist
-    pygame.display.update()
-
-    for event in pygame.event.get():
+def menu(): 
+    global spiel_zustand
+    menu = Menu(screen)
+    mouse = pygame.mouse.get_pos() 
+    for event in pygame.event.get():    
         if event.type == pygame.QUIT:
             sys.exit()
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_DOWN:
-                menue_auswahl = 1
-            elif event.key == pygame.K_UP:
-                menue_auswahl = 0
-            elif event.key == pygame.K_RETURN:
-                if menue_auswahl == 0:
-                    spiel_zustand = "spiel"  # Startet das Spiel
-                else:
-                    sys.exit()  # Beendet das Programm
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if menu.start_button.rect.collidepoint(mouse):
+                spiel_zustand = "spiel"
+                init_spiel()
+            if menu.quit_button.rect.collidepoint(mouse):
+                sys.exit()
+            if menu.stats_button.rect.collidepoint(mouse):
+                pass
+            if menu.trophy_button.rect.collidepoint(mouse):
+                pass
+    
 
 def zeichnen():
     screen.blit(assets.hintergrund, (hintergrund_pos_x,0))
