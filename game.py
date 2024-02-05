@@ -17,8 +17,8 @@ def init_spiel():
     spieler1 = Spieler(300,393,12,96,128,-16,[0,0,1,0,0,0],0,0,screen)
     # x, y, geschw, breite, höhe, richtung, xmin, xmaxm, screen, startrichtung (0 links, 1 rechts)
     zombies = []
-    zombies = [Zombie(600, 393, 5, 96, 128, 4, 4800, screen, 1),
-               Zombie(700, 393, 5, 96, 128, 4, 4800, screen, 0)]
+    zombies = [Zombie(600, 393, 0.5, 96, 128, 4, 4800, screen, 1),
+               Zombie(700, 393, 0.5, 96, 128, 4, 4800, screen, 0)]
                
     verloren = False
     gewonnen = False
@@ -77,10 +77,13 @@ def Kollision():
         zombieRechteck = pygame.Rect(zombieBildschirmX + 18, z.y + 24, z.breite - 36, z.hoehe - 24)
 
         for k in kugeln:
-            kugelRechteck = pygame.Rect(k.x - k.radius, k.y - k.radius, k.radius * 2, k.radius * 2)
-            if zombieRechteck.colliderect(kugelRechteck):
+            # Anpassung an das Bild statt Kreis für die Kollision
+            kugelBildRect = k.bild.get_rect(center=(k.x, k.y))
+            if zombieRechteck.colliderect(kugelBildRect):
                 kugeln.remove(k)
                 z.leben -= 1
+                z.getroffen = True
+                z.blink_timer = 10
                 if z.leben <= 0 and not verloren:
                     zombies.remove(z)
                     if not zombies:
@@ -138,7 +141,7 @@ def spiel():
             spieler1.angriff()
             if len(kugeln) <= 4 and spieler1.ok:
                 richtung = spieler1.last 
-                kugeln.append(Kugel(round(spieler1.x), round(spieler1.y), richtung, 8, (0,0,0), 7, screen))
+                kugeln.append(Kugel(round(spieler1.x), round(spieler1.y), richtung, assets.tortenbild, 7, screen))
                 spieler1.ok = False
                 # Setze den Angriffszustand basierend auf der letzten Bewegungsrichtung
                 if richtung[0]:  # Links
@@ -158,7 +161,7 @@ def spiel():
         Kollision()
         #spieler1.spZeichnen()  # Aktualisiere die Animation des Spielers
         zeichnen()
-        pygame.time.Clock().tick(60)
+  
 
         if verloren or gewonnen:
             if gewonnen:

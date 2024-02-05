@@ -1,6 +1,9 @@
 import pygame
 pygame.init()
 
+tortenbild = pygame.image.load("Grafiken/cake.png")
+tortenbild = pygame.transform.scale(tortenbild, (64, 64))
+
 hintergrund = pygame.image.load("Grafiken/hintergrund.png")
 menu1 = pygame.image.load("Grafiken/menue1.png")
 menu2 = pygame.image.load("Grafiken/menue2.png")

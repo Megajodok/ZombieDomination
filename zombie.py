@@ -2,6 +2,9 @@ import pygame
 import assets
 
 class Zombie:
+
+    FRAME_WECHSEL_RATE = 30 # Anpassen, um die Geschwindigkeit der Frame-Wechsel zu steuern
+    BLINK_DAUER = 30 # Dauer des Blinkens nach einem Treffer
     
     def __init__(self,welt_x,y,geschw,breite,hoehe,xMin,xMax, screen, startrichtung):
         self.welt_x = welt_x
@@ -15,6 +18,10 @@ class Zombie:
         self.xMax = xMax
         self.screen = screen
         self.leben = 6
+        self.getroffen = False
+        self.blink_timer = 0
+        self.frame_delay = 10
+        self.frame_counter = 0
         self.linksGehen = assets.ZombieLinksGehen
         self.rechtsGehen = assets.ZombieRechtsGehen
         self.ganz = assets.ganz
@@ -52,24 +59,41 @@ class Zombie:
         # Bewegung aktualisieren
         self.welt_x += self.geschw
 
+        self.frame_counter += 1
+
         # Animationsframes aktualisieren
-        if self.geschw > 0:  # Bewegt sich nach rechts
-            self.schritteRechts += 1
-            self.schritteRechts %= len(self.rechtsGehen)  # Zyklisch durchlaufen
-        elif self.geschw < 0:  # Bewegt sich nach links
-            self.schritteLinks += 1
-            self.schritteLinks %= len(self.linksGehen)  # Zyklisch durchlaufen
+        if self.frame_counter >= Zombie.FRAME_WECHSEL_RATE:
+
+            if self.geschw > 0:  # Bewegt sich nach rechts
+                self.schritteRechts += 1
+                self.schritteRechts %= len(self.rechtsGehen)  # Zyklisch durchlaufen
+            elif self.geschw < 0:  # Bewegt sich nach links
+                self.schritteLinks += 1
+                self.schritteLinks %= len(self.linksGehen)  # Zyklisch durchlaufen
+
+            self.frame_counter = 0
+        
+        # Blink-Logik, falls benötigt
+        if self.blink_timer > 0:
+            self.blink_timer -= 1
 
     def zZeichnen(self, hintergrund_pos_x):
-        bildschirm_x = self.welt_x + hintergrund_pos_x
-        if -self.breite <= bildschirm_x <= 1200:  # Im sichtbaren Bereich
-            bild = None
-            if self.geschw > 0:  # Geht nach rechts
-                bild = self.rechtsGehen[self.schritteRechts]
-            elif self.geschw < 0:  # Geht nach links
-                bild = self.linksGehen[self.schritteLinks]
-            if bild:
-                self.screen.blit(bild, (bildschirm_x, self.y))
+        # Prüfe, ob der Blink-Timer aktiv ist und ob der Zombie gezeichnet werden soll
+        if self.blink_timer == 0 or self.blink_timer % 2 == 0:
+            bildschirm_x = self.welt_x + hintergrund_pos_x
+            if -self.breite <= bildschirm_x <= 1200:  # Im sichtbaren Bereich
+                bild = None
+                if self.geschw > 0:  # Geht nach rechts
+                    bild = self.rechtsGehen[self.schritteRechts]
+                elif self.geschw < 0:  # Geht nach links
+                    bild = self.linksGehen[self.schritteLinks]
+                if bild:
+                    self.screen.blit(bild, (bildschirm_x, self.y))
+
+    def getroffen(self):
+        # Aktiviere den Blink-Timer, wenn der Zombie getroffen wird
+        self.blink_timer = Zombie.BLINK_DAUER
+
               
     def hinHer(self):
         # Aktualisiere welt_x statt nur x
