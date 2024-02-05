@@ -1,6 +1,6 @@
 import pygame
-import time
 import sys
+import os
 import assets
 from spieler import Spieler
 from zombie import Zombie
@@ -13,6 +13,10 @@ from Button import Button
 pygame.init()
 screen = pygame.display.set_mode([1200,595])
 pygame.display.set_caption("Pygame Tutorial")
+
+class ZombieDomination:
+    def __init__(self):
+        self.menu_sound = pygame.mixer.Sound(os.path.join("Sounds", "menu.mp3"))
 
 def init_spiel():
     global linkeWand, rechteWand, spieler1, zombies, verloren, gewonnen, kugeln, hintergrund_pos_x
@@ -175,10 +179,11 @@ def spiel():
  
 spiel_zustand = "menu" 
 menue_auswahl = 0  
-
+zd = ZombieDomination()
 while True:
     if spiel_zustand == "menu":
         menu()
+        pygame.mixer.Sound.play(zd.menu_sound)
     elif spiel_zustand == "spiel":
         spiel()
 
