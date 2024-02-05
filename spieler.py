@@ -56,21 +56,21 @@ class Spieler:
         self.spZeichnen()
 
     def sprungSetzen(self):
-        if self.sprungvar == -16:
+        if not self.sprung:  # Erlaubt das Setzen eines Sprungs nur, wenn nicht bereits gesprungen wird
             self.sprung = True
-            self.sprungvar = 15
-            pygame.mixer.Sound.play(assets.sprungSound)
+            self.sprungvar = 15.75  # Reset auf einen Startwert für den Sprung
+            pygame.mixer.Sound.play(assets.sprungSound)  # Abspielen des Sprungsounds
 
     def springen(self):
         if self.sprung:
             self.richtg = [0,0,0,1,0,0]
-            if self.sprungvar >= -15:
-                n = 1
-                if self.sprungvar < 0:
-                    n = -1
-                self.y -= (self.sprungvar**2)*0.17*n
-                self.sprungvar -= 1
-            else:
+            # Berechnet die neue Y-Position für den Sprung
+            n = 1 if self.sprungvar > 0 else -1  # Richtung des Sprungs
+            self.y -= (self.sprungvar ** 2) * 0.03 * n  # Aktualisiert die Y-Position
+            self.sprungvar -= 0.25  # Schrittweise Verringerung, um den Sprung zu simulieren
+            
+            if self.y >= 393:  # Boden erreicht
+                self.y = 393
                 self.sprung = False
 
     def spZeichnen(self):

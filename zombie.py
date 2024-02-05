@@ -93,7 +93,6 @@ class Zombie:
     def getroffen(self):
         # Aktiviere den Blink-Timer, wenn der Zombie getroffen wird
         self.blink_timer = Zombie.BLINK_DAUER
-
               
     def hinHer(self):
         # Aktualisiere welt_x statt nur x

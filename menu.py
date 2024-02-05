@@ -8,7 +8,8 @@ class Menu:
     """Represents game menu"""
     def __init__(self, screen):
         #Screen
-        self_background_image = pygame.image.load(Path("Grafiken/menu.jpg"))
+        self_background_image = pygame.image.load(Path("Grafiken/menu.png"))
+        self_background_image = pygame.transform.scale(self_background_image, (1200, 595))
         self.title = "Zombie Domination"
         self.copyright = "© 2024 - Made with love from zombies for robots"
         self.width = 1200
@@ -26,7 +27,7 @@ class Menu:
         self.quit_button._draw_element()
 
         #Text Elements
-        self.header = Textelement(screen, self.title, (124,2,0), 78, self.width/4, 10)._draw_element()
+        #self.header = Textelement(screen, self.title, (124,2,0), 78, self.width/4, 10)._draw_element()
         self.header = Textelement(screen, self.copyright, (255,255,255), 18, self.width/3, self.height-50)._draw_element()
 
         pygame.display.update()  

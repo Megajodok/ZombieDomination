@@ -16,16 +16,26 @@ pygame.display.set_caption("Pygame Tutorial")
 
 class ZombieDomination:
     def __init__(self):
-        self.menu_sound = pygame.mixer.Sound(os.path.join("Sounds", "menu.mp3"))
+        #pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=2048)
+        self.menu_music_played = False
+
+    def play_menu_sound(self):
+        if not self.menu_music_played:
+            self.menu_sound = pygame.mixer.Sound(os.path.join("Sounds", "jardinains.mp3"))
+            self.menu_sound.play()
+            self.menu_music_played = True
+
+    def reset_menu_music(self):
+        self.menu_music_played = False
 
 def init_spiel():
-    global linkeWand, rechteWand, spieler1, zombies, verloren, gewonnen, kugeln, hintergrund_pos_x
+    global linkeWand, rechteWand, spieler1, zombies, verloren, gewonnen, kugeln, hintergrund_pos_x, spielerWeltX
     linkeWand = pygame.draw.rect(screen, (255,255,255) , (0,0,2,600) , 0)
     rechteWand = pygame.draw.rect(screen, (0,0,0) , (4798,0,2,600) , 0)
     # x, y(boden), geschw, breite, höhe, sprungvar, richtg, schritteRechts, schritteLinks
-    spieler1 = Spieler(300,393,12,96,128,-16,[0,0,1,0,0,0],0,0,screen)
+    spieler1 = Spieler(300,393,3,96,128,-16,[0,0,1,0,0,0],0,0,screen)
     # x, y, geschw, breite, höhe, richtung, xmin, xmaxm, screen, startrichtung (0 links, 1 rechts)
-    zombies = []
+    #zombies = []
     zombies = [Zombie(600, 393, 0.5, 96, 128, 4, 4800, screen, 1),
                Zombie(700, 393, 0.5, 96, 128, 4, 4800, screen, 0)]
                
@@ -33,6 +43,7 @@ def init_spiel():
     gewonnen = False
     kugeln = []
     hintergrund_pos_x = 0
+    spielerWeltX = 300
 
 def menu(): 
     global spiel_zustand
@@ -55,6 +66,18 @@ def menu():
 
 def zeichnen():
     screen.blit(assets.hintergrund, (hintergrund_pos_x,0))
+    
+    # Berechne die Bildschirmposition der Plattform basierend auf hintergrund_pos_x
+    plattform_bildschirm_x = plattform.x + hintergrund_pos_x
+
+    # Erstelle ein neues Rect für die Plattform mit der aktualisierten X-Position
+    plattform_bildschirm_rect = pygame.Rect(plattform_bildschirm_x, plattform.y, plattform.width, plattform.height)
+
+    # Färbe die Plattform
+    plattform_farbe = (0, 128, 128)  # Türkisfarben, aber du kannst jede Farbe wählen
+    pygame.draw.rect(screen, plattform_farbe, plattform_bildschirm_rect)
+
+
     for k in kugeln:
         k.zeichnen()
     spieler1.spZeichnen()
@@ -93,18 +116,29 @@ def Kollision():
                     zombies.remove(z)
                     if not zombies:
                         gewonnen = True
+                        zd.menu_sound.stop()
                         pygame.mixer.Sound.play(assets.siegSound)
 
         # Überprüfe die Kollision zwischen dem Spieler und dem Zombie
         if spielerRechteck.colliderect(zombieRechteck):
             verloren = True
             gewonnen = False
+            zd.menu_sound.stop()
             pygame.mixer.Sound.play(assets.verlorenSound)
             spiel_zustand = "menu"
             return
- 
+
+# Plattform Definition
+plattform = pygame.Rect(500, 400, 200, 50)  # Beispiel: Eine Plattform von x=500 bis x=700 auf y=400
+
+def pruefePlattformKollision(spielerRect):
+    # Prüfe, ob der untere Teil des Spielers mit der Oberseite der Plattform kollidiert
+    if spielerRect.bottom >= plattform.top and plattform.left <= spielerRect.right and plattform.right >= spielerRect.left:
+        return True
+    return False
+
 def spiel():
-    global spiel_zustand, verloren, gewonnen, kugeln, hintergrund_pos_x
+    global spiel_zustand, verloren, gewonnen, kugeln, hintergrund_pos_x, spielerWeltX
     # init_spiel() sollte nur einmal aufgerufen werden, daher entfernen wir es hier aus der spiel-Schleife
 
     init_spiel()
@@ -157,7 +191,10 @@ def spiel():
         else:
             spieler1.ok = True
 
+        spielerWeltX = spieler1.x + abs(hintergrund_pos_x)
+
         kugelHandler()
+        aktualisiereSpielerPosition()
 
         for z in zombies:
             z.hinHer()
@@ -177,15 +214,45 @@ def spiel():
             pygame.time.delay(2000)
             spiel_zustand = "menu"
  
+def aktualisiereSpielerPosition():
+    global spieler1, spielerWeltX
+    # Berechne die Weltkoordinaten von spieler1 für die Kollisionsüberprüfung
+    spielerWeltX = spieler1.x + abs(hintergrund_pos_x)
+    spielerRect = pygame.Rect(spielerWeltX, spieler1.y, spieler1.breite, spieler1.hoehe)
+    
+    aufPlattform = pruefePlattformKollision(spielerRect)
+
+    # Wenn der Spieler springt oder fällt, führe die Sprungbewegung durch
+    if spieler1.sprung:
+        spieler1.springen()
+
+    # Wenn der Spieler auf der Plattform steht, aber sich bewegt, sodass er nicht mehr auf ihr sein sollte
+    if aufPlattform:
+        # Überprüfe, ob der Spieler sich seitlich über den Rand der Plattform hinaus bewegt
+        if not (spielerWeltX + spieler1.breite > plattform.left and spielerWeltX < plattform.right):
+            # Der Spieler bewegt sich über den Rand der Plattform hinaus und sollte beginnen zu fallen
+            spieler1.sprung = True  # Ermöglicht dem Spieler zu fallen
+            spieler1.sprungvar = -16  # Setzt die Sprungvariable zurück, um einen "Fall" zu simulieren
+        else:
+            # Der Spieler steht sicher auf der Plattform
+            spieler1.y = plattform.top - spieler1.hoehe
+            spieler1.sprung = False  # Der Spieler springt nicht und fällt nicht
+    else:
+        # Wenn der Spieler nicht auf der Plattform steht und nicht den Boden erreicht hat, fällt er
+        if spieler1.y < 393 and not spieler1.sprung:
+            spieler1.sprung = True  # Der Spieler sollte fallen
+
+
 spiel_zustand = "menu" 
 menue_auswahl = 0  
 zd = ZombieDomination()
 while True:
     if spiel_zustand == "menu":
         menu()
-        pygame.mixer.Sound.play(zd.menu_sound)
+        zd.play_menu_sound()
     elif spiel_zustand == "spiel":
         spiel()
+        zd.reset_menu_music()
 
     clock = pygame.time.Clock()
     clock.tick(60)
