@@ -17,13 +17,13 @@ class Menu:
         screen.blit(self_background_image, (0, 0))
 
         #Buttons
-        self.start_button = Button(screen, "Start", (101,123,80), 34, 0, 140)
+        self.start_button = Button(screen, "Start", (101,123,80), 34, 500, 200)
         self.start_button._draw_element()
-        self.trophy_button = Button(screen, "Trophies", (101,123,80), 34, 0, 240)
+        self.trophy_button = Button(screen, "Trophies", (101,123,80), 34, 500, 280)
         self.trophy_button._draw_element()
-        self.stats_button = Button(screen, "Stats", (101,123,80), 34, 0, 340)
+        self.stats_button = Button(screen, "Stats", (101,123,80), 34, 500, 360)
         self.stats_button._draw_element()
-        self.quit_button = Button(screen, "Quit", (101,123,80), 34, 0, 440)
+        self.quit_button = Button(screen, "Quit", (101,123,80), 34, 500, 440)
         self.quit_button._draw_element()
 
         #Text Elements

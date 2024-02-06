@@ -33,11 +33,11 @@ def init_spiel():
     linkeWand = pygame.draw.rect(screen, (255,255,255) , (0,0,2,600) , 0)
     rechteWand = pygame.draw.rect(screen, (0,0,0) , (4798,0,2,600) , 0)
     # x, y(boden), geschw, breite, höhe, sprungvar, richtg, schritteRechts, schritteLinks
-    spieler1 = Spieler(300,393,3,96,128,-16,[0,0,1,0,0,0],0,0,screen)
+    spieler1 = Spieler(300,393,8,96,128,-16,[0,0,1,0,0,0],0,0,screen)
     # x, y, geschw, breite, höhe, richtung, xmin, xmaxm, screen, startrichtung (0 links, 1 rechts)
     #zombies = []
-    zombies = [Zombie(600, 393, 0.5, 96, 128, 4, 4800, screen, 1),
-               Zombie(700, 393, 0.5, 96, 128, 4, 4800, screen, 0)]
+    zombies = [Zombie(600, 393, 2, 96, 128, 4, 4800, screen, 1),
+               Zombie(700, 393, 2, 96, 128, 4, 4800, screen, 0)]
                
     verloren = False
     gewonnen = False
@@ -62,6 +62,9 @@ def menu():
                 pass
             if menu.trophy_button.rect.collidepoint(mouse):
                 pass
+
+        if event.type == pygame.K_DOWN:
+            Button.selected = True
     
 
 def zeichnen():
