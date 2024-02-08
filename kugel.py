@@ -34,8 +34,3 @@ class Kugel:
         bild_rect = self.bild.get_rect(center=(self.x, self.y))
         self.screen.blit(self.bild, bild_rect)
 
-# Das Bild muss vorher geladen werden
-  # Stelle sicher, dass 'torte.png' im Projektverzeichnis ist
-
-# Beispiel, wie ein Kugel-Objekt jetzt erstellt wird:
-# 

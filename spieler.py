@@ -64,14 +64,15 @@ class Spieler:
     def springen(self):
         if self.sprung:
             self.richtg = [0,0,0,1,0,0]
-            # Berechnet die neue Y-Position für den Sprung
-            n = 1 if self.sprungvar > 0 else -1  # Richtung des Sprungs
+            # Berechnet die neue Y-Position für den Sprung oder Fall
+            n = 1 if self.sprungvar > 0 else -1  # Richtung des Sprungs/Falls
             self.y -= (self.sprungvar ** 2) * 0.03 * n  # Aktualisiert die Y-Position
-            self.sprungvar -= 0.25  # Schrittweise Verringerung, um den Sprung zu simulieren
+            self.sprungvar -= 0.25  # Schrittweise Verringerung, um den Sprung oder Fall zu simulieren
             
-            if self.y >= 393:  # Boden erreicht
-                self.y = 393
-                self.sprung = False
+            if self.sprungvar < -16:
+                self.sprungvar = -16  # Begrenzt die Sprungvariable, um einen unendlichen Fall zu vermeiden
+
+           
 
     def spZeichnen(self):
         if self.schritteRechts == 63:
