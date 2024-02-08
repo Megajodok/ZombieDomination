@@ -13,6 +13,7 @@ from Button import Button
 pygame.init()
 screen = pygame.display.set_mode([1200,595])
 pygame.display.set_caption("Pygame Tutorial")
+active_button_index = 0
 
 class ZombieDomination:
     def __init__(self):
@@ -45,44 +46,73 @@ def init_spiel():
     hintergrund_pos_x = 0
     spielerWeltX = 300
 
-def menu(): 
-    global spiel_zustand
-    menu = Menu(screen)
-    mouse = pygame.mouse.get_pos() 
-    for event in pygame.event.get():    
+def menu():
+    global spiel_zustand, active_button_index
+    menu = Menu(screen)   
+    buttons = [menu.start_button, menu.trophy_button, menu.stats_button, menu.quit_button]
+
+    mouse = pygame.mouse.get_pos()
+    for event in pygame.event.get():
+        
         if event.type == pygame.QUIT:
             sys.exit()
+
+        if event.type == pygame.MOUSEMOTION:
+            for i, button in enumerate(buttons):
+                if button.rect.collidepoint(mouse):
+                    active_button_index = i
+                    break
+
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if menu.start_button.rect.collidepoint(mouse):
-                spiel_zustand = "spiel"
-                init_spiel()
-            if menu.quit_button.rect.collidepoint(mouse):
-                sys.exit()
-            if menu.stats_button.rect.collidepoint(mouse):
-                pass
-            if menu.trophy_button.rect.collidepoint(mouse):
-                pass
+            if buttons[0].rect.collidepoint(mouse):
+                    spiel_zustand = "spiel"
+                    init_spiel()
+            if buttons[3].rect.collidepoint(mouse):
+                    sys.exit()
+                # Füge hier zusätzliche Aktionen für Trophies und Stats ein
+                    
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                active_button_index = (active_button_index - 1) % 4
+            elif event.key == pygame.K_DOWN:
+                active_button_index = (active_button_index + 1) % 4
+            elif event.key == pygame.K_RETURN:
+                if active_button_index == 0:  # Start
+                    spiel_zustand = "spiel"
+                    init_spiel()
+                elif active_button_index == 3:  # Quit
+                    sys.exit()
+                # Füge hier zusätzliche Aktionen für Trophies und Stats ein, falls benötigt
     
+    for i, button in enumerate(buttons):
+            button.set_active(i == active_button_index)
+            button._draw_element()
+
+    print(active_button_index)
+
+    pygame.display.update()
+   
+def drawPlatform(plattform):
+    # Berechne die Bildschirmposition der Plattform basierend auf hintergrund_pos_x
+    plattform_bildschirm_x = plattform.x + hintergrund_pos_x
+    # Erstelle ein neues Rect für die Plattform mit der aktualisierten X-Position
+    plattform_bildschirm_rect = pygame.Rect(plattform_bildschirm_x, plattform.y, plattform.width, plattform.height)
+    
+    plattform_farbe = (0, 128, 128)  # Türkisn
+    pygame.draw.rect(screen, plattform_farbe, plattform_bildschirm_rect)
+
 
 def zeichnen():
     screen.blit(assets.hintergrund, (hintergrund_pos_x,0))
     
-    # Berechne die Bildschirmposition der Plattform basierend auf hintergrund_pos_x
-    plattform_bildschirm_x = plattform.x + hintergrund_pos_x
-
-    # Erstelle ein neues Rect für die Plattform mit der aktualisierten X-Position
-    plattform_bildschirm_rect = pygame.Rect(plattform_bildschirm_x, plattform.y, plattform.width, plattform.height)
-
-    # Färbe die Plattform
-    plattform_farbe = (0, 128, 128)  # Türkisfarben, aber du kannst jede Farbe wählen
-    pygame.draw.rect(screen, plattform_farbe, plattform_bildschirm_rect)
+    drawPlatform(plattform1)
 
 
     for k in kugeln:
         k.zeichnen()
     spieler1.spZeichnen()
     
-    for z in zombies:  # Zeichne jeden Zombie in der Liste
+    for z in zombies:  
         z.zZeichnen(hintergrund_pos_x)
         z.herzen()  # Wenn jeder Zombie eigene Lebenspunkte hat
     pygame.display.update() 
@@ -129,19 +159,17 @@ def Kollision():
             return
 
 # Plattform Definition
-plattform = pygame.Rect(500, 400, 200, 50)  # Beispiel: Eine Plattform von x=500 bis x=700 auf y=400
+plattform1 = pygame.Rect(600, 400, 200, 10)  # Beispiel: Eine Plattform von x=500 bis x=700 auf y=400
 
-def pruefePlattformKollision(spielerRect):
+def pruefePlattformKollision(spielerRect, plattform):
     # Prüfe, ob der untere Teil des Spielers mit der Oberseite der Plattform kollidiert
     if spielerRect.bottom >= plattform.top and plattform.left <= spielerRect.right and plattform.right >= spielerRect.left:
+        print(True)
         return True
     return False
 
 def spiel():
     global spiel_zustand, verloren, gewonnen, kugeln, hintergrund_pos_x, spielerWeltX
-    # init_spiel() sollte nur einmal aufgerufen werden, daher entfernen wir es hier aus der spiel-Schleife
-
-    init_spiel()
 
     while spiel_zustand == "spiel":
         for event in pygame.event.get():
@@ -194,17 +222,16 @@ def spiel():
         spielerWeltX = spieler1.x + abs(hintergrund_pos_x)
 
         kugelHandler()
-        aktualisiereSpielerPosition()
+        aktualisiereSpielerPosition(plattform1)
 
         for z in zombies:
             z.hinHer()
             z.Laufen()
     
         Kollision()
-        #spieler1.spZeichnen()  # Aktualisiere die Animation des Spielers
+        spieler1.spZeichnen()  # Aktualisiere die Animation des Spielers
         zeichnen()
   
-
         if verloren or gewonnen:
             if gewonnen:
                 screen.blit(assets.siegBild, (0,0))
@@ -214,13 +241,13 @@ def spiel():
             pygame.time.delay(2000)
             spiel_zustand = "menu"
  
-def aktualisiereSpielerPosition():
-    global spieler1, spielerWeltX
+def aktualisiereSpielerPosition(plattform):
+    global spieler1
     # Berechne die Weltkoordinaten von spieler1 für die Kollisionsüberprüfung
     spielerWeltX = spieler1.x + abs(hintergrund_pos_x)
     spielerRect = pygame.Rect(spielerWeltX, spieler1.y, spieler1.breite, spieler1.hoehe)
     
-    aufPlattform = pruefePlattformKollision(spielerRect)
+    aufPlattform = pruefePlattformKollision(spielerRect, plattform1)
 
     # Wenn der Spieler springt oder fällt, führe die Sprungbewegung durch
     if spieler1.sprung:
